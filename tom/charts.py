@@ -423,7 +423,7 @@ def chart(chart_type: str, column_name: str, df: pd.DataFrame = None):
         df = tom.get_active_df()
         
     if df is None:
-        print("❌ Error: No dataset loaded. Load a dataset first using om.file().")
+        print("❌ Error: No dataset loaded. Load a dataset first using mos.file().")
         return
         
     if column_name not in df.columns:

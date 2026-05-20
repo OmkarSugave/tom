@@ -553,7 +553,7 @@ def describe(df: pd.DataFrame = None):
         
     if df is None:
         rprint("[bold red]❌ Error: No dataset is loaded into the TOM state.[/bold red]")
-        rprint("   [yellow]Please load a file first using: om.file('filename.csv')[/yellow]")
+        rprint("   [yellow]Please load a file first using: mos.file('filename.csv')[/yellow]")
         return None
 
     filename = os.path.basename(tom.get_active_path() or "active_dataframe")

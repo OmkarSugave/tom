@@ -1,6 +1,6 @@
 # 🚀 tom-analytics — One-Line Autonomous Data Analytics & EDA Library
 
-[![PyPI Version](https://img.shields.io/badge/pypi-v0.1.1-blue.svg)](https://pypi.org/project/tom-analytics/)
+[![PyPI Version](https://img.shields.io/badge/pypi-v1.2.0-blue.svg)](https://pypi.org/project/tom-analytics/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Supported OS: Windows / macOS / Linux](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-green.svg)]()
 [![Python: 3.8+](https://img.shields.io/badge/Python-3.8%2B-purple.svg)]()
@@ -15,7 +15,7 @@ The library is designed to go from raw file to interactive, publication-ready re
 
 ```mermaid
 graph TD
-    A[Raw File / DataFrame] -->|om.file| B(Parser & Format Detector)
+    A[Raw File / DataFrame] -->|mos.file| B(Parser & Format Detector)
     B -->|Automatic Type Inference| C(Cleaner & Imputer)
     C -->|Auto-Impute / Drop Dups| D(Autonomous Stats Engine)
     D -->|Parametric & Non-Parametric Tests| E(Visual Suite Generator)
@@ -27,7 +27,7 @@ graph TD
 
 ## ✨ Features & Capabilities
 
-* 📂 **Universal File Parser (`om.file`)**: Delimiter-independent parser supporting CSV, TSV, JSON, Excel, and Parquet. Features interactive path prompt and string-matching path suggestions.
+* 📂 **Universal File Parser (`mos.file`)**: Delimiter-independent parser supporting CSV, TSV, JSON, Excel, and Parquet. Features interactive path prompt and string-matching path suggestions.
 * 🧹 **Autonomous Preprocessing & ID Isolation**: Intelligent type coercion (dates, numerical objects), median/mode missing value imputation, automatic column pruning (drops column with $>50\%$ missing values), and duplicate row filtering.
   * *Robust ID Isolation*: Automatically identifies database identifiers, sequential row indices, and UUIDs (e.g. `roll_id`, `user_id`). **Preserves them** in the active DataFrame to prevent downstream pipeline crashes, but completely isolates them from correlation heatmaps, ANOVA tests, and statistical summaries.
 * 📊 **Multi-faceted Statistical Engine**: Computes high-fidelity parametric/non-parametric metrics, Chi-Square tests for category associations, and ANOVA tests for continuous-categorical relationships.
@@ -69,69 +69,69 @@ pip install tom-analytics
 
 ## 🚀 Quickstart & Essential API Reference
 
-Import `tom` as `om` and unleash automated EDA immediately:
+Import `tom` as `mos` and unleash automated EDA immediately:
 
 ```python
-import tom as om
+import tom as mos
 
 # 1. Load your dataset (automatically handles format & paths)
-om.file("mock_data.csv")
+mos.file("mock_data.csv")
 
 # 2. Run the complete autonomous pipeline!
-om.describe()
+mos.describe()
 ```
 
 ---
 
 ## 📖 Deep API Reference
 
-### 1. File Loading & Parse: `om.file(path=None)`
+### 1. File Loading & Parse: `mos.file(path=None)`
 Loads any tabular dataset. If no path is provided, it opens an interactive terminal dialogue.
 ```python
 # Direct path loading
-om.file("dataset.parquet")
+mos.file("dataset.parquet")
 
 # Delimiter, type, and encoding detection are completely autonomous.
 # If you make a typo, tom will suggest the nearest file name!
 ```
 
-### 2. Auto-Cleaning: `om.clean_report(df=None)`
+### 2. Auto-Cleaning: `mos.clean_report(df=None)`
 Runs and prints a detailed analysis of missing data, data types, duplicate rows, and imputed actions.
 ```python
-om.clean_report()
+mos.clean_report()
 ```
 
-### 3. Outlier Analysis: `om.outliers(df=None)`
+### 3. Outlier Analysis: `mos.outliers(df=None)`
 Runs an IQR-based boundary analysis across all numerical features, displaying lower/upper limits, min/max outliers, and percentages.
 ```python
-om.outliers()
+mos.outliers()
 ```
 
-### 4. Association & Correlation: `om.correlation(df=None)`
+### 4. Association & Correlation: `mos.correlation(df=None)`
 Calculates the Pearson correlation matrix for numerical features. Saves a publication-quality heatmap at `./tom_report/charts/single_correlation_heatmap.png` and prints a formatted terminal table.
 ```python
-om.correlation()
+mos.correlation()
 ```
 
-### 5. Automated Machine Learning Guide: `om.suggest(df=None)`
+### 5. Automated Machine Learning Guide: `mos.suggest(df=None)`
 Analyzes dataset dimensions, distribution, and types to recommend a classification or regression pipeline. Suggests the best-suited machine learning models (e.g., Random Forests, XGBoost, Ridge) and lists essential preprocessing rules.
 ```python
-om.suggest()
+mos.suggest()
 ```
 
-### 6. Side-by-Side Comparison: `om.compare(df2, df1=None)`
+### 6. Side-by-Side Comparison: `mos.compare(df2, df1=None)`
 Compares two DataFrames (e.g., training vs. test, or original vs. cleaned) showing shapes, missing values, duplicates, and column overlaps.
 ```python
 import pandas as pd
 df_test = pd.read_csv("test_dataset.csv")
 
-om.compare(df_test)
+mos.compare(df_test)
 ```
 
-### 7. Exporting Reports: `om.export(format_type="pdf")`
+### 7. Exporting Reports: `mos.export(format_type="pdf")`
 Exports your gorgeous glassmorphic HTML report into a standard PDF page.
 ```python
-om.export("pdf")
+mos.export("pdf")
 ```
 *Note: PDF export utilizes `pdfkit` (requires `wkhtmltopdf` on your system path).*
 

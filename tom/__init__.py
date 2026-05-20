@@ -50,7 +50,7 @@ def clean_report(df: pd.DataFrame = None):
     if df is None:
         df = _active_df
     if df is None:
-        rprint("[bold red]❌ Error: No dataset loaded. Run om.file() first.[/bold red]")
+        rprint("[bold red]❌ Error: No dataset loaded. Run mos.file() first.[/bold red]")
         return
         
     from tom.cleaner import clean_data, print_clean_report
@@ -62,7 +62,7 @@ def correlation(df: pd.DataFrame = None):
     if df is None:
         df = _active_df
     if df is None:
-        rprint("[bold red]❌ Error: No dataset loaded. Run om.file() first.[/bold red]")
+        rprint("[bold red]❌ Error: No dataset loaded. Run mos.file() first.[/bold red]")
         return
         
     import tom.utils as utils
@@ -105,7 +105,7 @@ def outliers(df: pd.DataFrame = None):
     if df is None:
         df = _active_df
     if df is None:
-        rprint("[bold red]❌ Error: No dataset loaded. Run om.file() first.[/bold red]")
+        rprint("[bold red]❌ Error: No dataset loaded. Run mos.file() first.[/bold red]")
         return
         
     import tom.utils as utils
@@ -161,7 +161,7 @@ def suggest(df: pd.DataFrame = None):
     if df is None:
         df = _active_df
     if df is None:
-        rprint("[bold red]❌ Error: No dataset loaded. Run om.file() first.[/bold red]")
+        rprint("[bold red]❌ Error: No dataset loaded. Run mos.file() first.[/bold red]")
         return
         
     rprint("\n[bold cyan]🤖 Autonomous Machine Learning Model Suggestions[/bold cyan]")
@@ -214,7 +214,7 @@ def compare(df2: pd.DataFrame, df1: pd.DataFrame = None):
     if df1 is None:
         df1 = _active_df
     if df1 is None:
-        rprint("[bold red]❌ Error: Active dataset is missing. Run om.file() first.[/bold red]")
+        rprint("[bold red]❌ Error: Active dataset is missing. Run mos.file() first.[/bold red]")
         return
         
     rprint("\n[bold cyan]🔄 Side-by-Side Dataset Comparison[/bold cyan]")
@@ -256,7 +256,7 @@ def export(format_type: str = "pdf"):
     html_path = "./tom_report/report.html"
     
     if not os.path.exists(html_path):
-        rprint("[bold red]❌ Error: Generate a report first by running om.describe().[/bold red]")
+        rprint("[bold red]❌ Error: Generate a report first by running mos.describe().[/bold red]")
         return
         
     if format_type == "pdf":
