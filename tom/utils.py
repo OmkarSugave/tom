@@ -21,7 +21,7 @@ def rename_duplicate_columns(df: pd.DataFrame) -> pd.DataFrame:
 def detect_column_types(df: pd.DataFrame):
     """
     Detects the logical data types of all columns in the DataFrame.
-    Categorizes them into: 'numerical', 'categorical', 'text_id', 'datetime', 'unsupported'.
+    Categorizes them into: 'id', 'numerical', 'categorical', 'text_id', 'datetime', 'unsupported'.
     Returns a dictionary of column name -> type category.
     """
     col_types = {}
@@ -33,12 +33,46 @@ def detect_column_types(df: pd.DataFrame):
             col_types[col] = 'unsupported'
             continue
         
-        # 1. If already datetime-like
+        # 1. Check if it is an ID column
+        col_lower = str(col).lower().strip()
+        is_id_name = (
+            col_lower in ['id', 'rowid', 'row_id', 'index', 'uuid', 'guid', 'pk', 'sk', 'roll_id'] or
+            col_lower.endswith('_id') or col_lower.endswith('id') or
+            col_lower.endswith('_key') or col_lower.endswith('key') or
+            col_lower.endswith('_uuid') or col_lower.endswith('uuid') or
+            col_lower.startswith('id_')
+        )
+        
+        is_id_values = False
+        if len(non_null) >= 5 and non_null.nunique() == len(non_null):
+            # Check for sequential integers (monotonic sequence with step 1)
+            if pd.api.types.is_numeric_dtype(series):
+                try:
+                    sorted_vals = np.sort(non_null.values)
+                    if np.all(np.diff(sorted_vals) == 1):
+                        is_id_values = True
+                except Exception:
+                    pass
+            # Check if strings are typical hash/uuid/serial values
+            elif series.dtype == 'object':
+                try:
+                    sample = non_null.head(10)
+                    is_hash = all(isinstance(x, str) and (len(x) > 5) for x in sample)
+                    if is_hash:
+                        is_id_values = True
+                except Exception:
+                    pass
+                    
+        if is_id_name or is_id_values:
+            col_types[col] = 'id'
+            continue
+
+        # 2. If already datetime-like
         if pd.api.types.is_datetime64_any_dtype(series):
             col_types[col] = 'datetime'
             continue
             
-        # 2. Check if object/string looks like datetime
+        # 3. Check if object/string looks like datetime
         if series.dtype == 'object' or isinstance(series.dtype, pd.CategoricalDtype):
             # Try parsing a subset to speed up
             sample_size = min(len(non_null), 200)
@@ -58,7 +92,7 @@ def detect_column_types(df: pd.DataFrame):
             except Exception:
                 pass
 
-        # 3. Check if numeric
+        # 4. Check if numeric
         # First, if it can be fully converted to numeric
         if pd.api.types.is_numeric_dtype(series):
             # Check if it has float/int types
@@ -78,7 +112,7 @@ def detect_column_types(df: pd.DataFrame):
         except Exception:
             pass
 
-        # 4. Categorical vs Text/ID
+        # 5. Categorical vs Text/ID
         unique_count = non_null.nunique()
         if unique_count <= 20:
             col_types[col] = 'categorical'

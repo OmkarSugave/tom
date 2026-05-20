@@ -44,3 +44,7 @@ mock_data.csv
 *.njsproj
 *.sln
 *.sw?
+
+# Scratch folder
+scratch/
+

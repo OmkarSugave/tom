@@ -109,8 +109,8 @@ def clean_data(df: pd.DataFrame):
                     imputed_val = 0.0 # fallback if median is NaN
                 df_cleaned[col] = series.fillna(imputed_val)
                 missing_filled = missing_count
-            elif col_logical_type in ['categorical', 'text_id']:
-                # Categorical / Text -> Fill with mode
+            elif col_logical_type in ['categorical', 'text_id', 'id']:
+                # Categorical / Text / ID -> Fill with mode
                 mode_series = series.mode()
                 imputed_val = mode_series[0] if len(mode_series) > 0 else "Unknown"
                 df_cleaned[col] = series.fillna(imputed_val)
@@ -142,6 +142,8 @@ def clean_data(df: pd.DataFrame):
         # Cardanality check / categorization labels
         if col_logical_type == 'text_id':
             warnings.append(f"Column '{col}' is high-cardinality string (>20 unique values). Labeled as text/id-like.")
+        elif col_logical_type == 'id':
+            warnings.append(f"Column '{col}' is recognized as an Identifier (ID/Key) and will be preserved but excluded from statistical summaries and correlation analysis.")
 
         summary_info.append({
             'column': col,
