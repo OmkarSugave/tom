@@ -1,6 +1,6 @@
 # 🚀 tom-analytics — One-Line Autonomous Data Analytics & EDA Library
 
-[![PyPI Version](https://img.shields.io/badge/pypi-v0.1.0-blue.svg)](https://pypi.org/project/tom-analytics/)
+[![PyPI Version](https://img.shields.io/badge/pypi-v0.1.1-blue.svg)](https://pypi.org/project/tom-analytics/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Supported OS: Windows / macOS / Linux](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-green.svg)]()
 [![Python: 3.8+](https://img.shields.io/badge/Python-3.8%2B-purple.svg)]()
@@ -28,12 +28,18 @@ graph TD
 ## ✨ Features & Capabilities
 
 * 📂 **Universal File Parser (`om.file`)**: Delimiter-independent parser supporting CSV, TSV, JSON, Excel, and Parquet. Features interactive path prompt and string-matching path suggestions.
-* 🧹 **Autonomous Preprocessing (`om.clean_report`)**: Intelligent type coercion (dates, numerical objects), median/mode missing value imputation, automatic column pruning (drops column with $>50\%$ missing values), and duplicate row filtering.
-* 📊 **Multi-faceted Statistical Engine**: Computes high-fidelity parametric/non-parametric metrics, Shapiro-Wilk normality tests (dynamically capped up to a 5k sample limit), Chi-Square tests for category associations, and ANOVA tests for continuous-categorical relationships.
+* 🧹 **Autonomous Preprocessing & ID Isolation**: Intelligent type coercion (dates, numerical objects), median/mode missing value imputation, automatic column pruning (drops column with $>50\%$ missing values), and duplicate row filtering.
+  * *Robust ID Isolation*: Automatically identifies database identifiers, sequential row indices, and UUIDs (e.g. `roll_id`, `user_id`). **Preserves them** in the active DataFrame to prevent downstream pipeline crashes, but completely isolates them from correlation heatmaps, ANOVA tests, and statistical summaries.
+* 📊 **Multi-faceted Statistical Engine**: Computes high-fidelity parametric/non-parametric metrics, Chi-Square tests for category associations, and ANOVA tests for continuous-categorical relationships.
 * 🎨 **Vibrant Visualizations Suite**: High-res static plots (ECDF, Q-Q, violin, box plots, histograms, pairplots, missing value heatmaps) at 300 DPI alongside a fully interactive pan/zoom Plotly dashboard.
-* 💡 **NLP Insights Generation**: Natural language insights identifying multicollinearity, high-cardinality, data skewness warnings, and non-normality logs.
+* 💡 **Context-Aware Analytics & NLP Insights**: Generates 10–20 plain-English mathematical diagnostics that avoid common automated EDA interpretation pitfalls:
+  * *Math-Safe Transformation Suggestion*: Checks numerical column bounds before suggesting log/Box-Cox transformations, ensuring `log1p` or `Yeo-Johnson` are recommended if `0` or negative values are present to prevent code crashes.
+  * *Heavy-Tails vs. Outliers*: Automatically identifies power-law or log-normal distributions. Warns against blindly dropping outliers that are legitimate heavy-tail values, recommending robust scaling (`RobustScaler`) instead.
+  * *Actionable Class Imbalance Advice*: Highlights dominant categorical frequencies ($>70\%$) and suggests precise code tactics, such as stratified splitting (`stratify=y`), class weighting (`class_weight='balanced'`), and tracking F1-score/Precision-Recall rather than overall accuracy.
+  * *Subgroup Normality Checks*: Conducts Shapiro-Wilk testing at the subgroup level of categorical features. If a distribution is non-normal overall but normal within subgroups, it notes that **parametric tests (ANOVA, t-tests) remain statistically valid**.
 * 🪟 **Glassmorphic HTML Compiler**: Renders a premium, self-contained, completely portable HTML dashboard (`./tom_report/report.html`) utilizing elegant card spacing, backdrop blurs, dark purple-to-blue gradients, and collapsible diagnostic panels.
 * 🖥️ **Windows CP1252 Fixes Out-of-the-Box**: Process-level `sys.stdout` and `sys.stderr` are automatically reconfigured to UTF-8 to prevent any Windows encoding crashes when displaying terminal emojis.
+
 
 ---
 
