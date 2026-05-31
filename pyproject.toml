@@ -20,7 +20,8 @@ dependencies = [
     "plotly",
     "kaleido",
     "jinja2",
-    "tabulate"
+    "tabulate",
+    "openpyxl"
 ]
 
 [tool.setuptools.packages.find]
