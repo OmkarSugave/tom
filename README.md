@@ -1,6 +1,6 @@
 # 🚀 tom-analytics — One-Line Autonomous Data Analytics & EDA Library
 
-[![PyPI Version](https://img.shields.io/badge/pypi-v1.2.0-blue.svg)](https://pypi.org/project/tom-analytics/)
+[![PyPI Version](https://img.shields.io/badge/pypi-v1.2.1-blue.svg)](https://pypi.org/project/tom-analytics/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Supported OS: Windows / macOS / Linux](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-green.svg)]()
 [![Python: 3.8+](https://img.shields.io/badge/Python-3.8%2B-purple.svg)]()

@@ -352,6 +352,72 @@ HTML_TEMPLATE = """
             </ul>
         </div>
 
+        <!-- Live Machine Learning Benchmark -->
+        {% if stats.baseline_ml and not stats.baseline_ml.error %}
+        <div class="glass-panel" style="border-color: rgba(99, 102, 241, 0.2); background: linear-gradient(135deg, rgba(22, 29, 49, 0.8) 0%, rgba(99, 102, 241, 0.05) 100%); text-align: left;">
+            <h2 style="margin-bottom: 8px;">🧠 Autonomous Machine Learning Baseline Evaluation</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 25px;">Trained and validated on the backend using an optimized RandomForest engine with 5-Fold Cross-Validation.</p>
+            
+            <div class="meta-grid" style="margin-top: 10px; margin-bottom: 30px;">
+                <div class="meta-card" style="background: rgba(99, 102, 241, 0.05); border-color: rgba(99, 102, 241, 0.15);">
+                    <h3>Target Column</h3>
+                    <p style="color: var(--accent-sec); font-size: 1.4rem;">{{ stats.baseline_ml.target }}</p>
+                </div>
+                <div class="meta-card">
+                    <h3>Model Task</h3>
+                    <p style="text-transform: uppercase; font-size: 1.4rem;">{{ stats.baseline_ml.type }}</p>
+                </div>
+                {% if stats.baseline_ml.type == 'classification' %}
+                <div class="meta-card" style="border-color: rgba(16, 185, 129, 0.2); background: rgba(16, 185, 129, 0.02);">
+                    <h3>CV Accuracy</h3>
+                    <p style="color: var(--green); font-size: 1.6rem;">{{ "%.1f"|format(stats.baseline_ml.accuracy * 100) }}%</p>
+                </div>
+                <div class="meta-card">
+                    <h3>F1-Score (Weighted)</h3>
+                    <p style="color: var(--green); font-size: 1.6rem;">{{ "%.1f"|format(stats.baseline_ml.f1_score * 100) }}%</p>
+                </div>
+                {% else %}
+                <div class="meta-card" style="border-color: rgba(6, 182, 212, 0.2); background: rgba(6, 182, 212, 0.02);">
+                    <h3>R² Coefficient</h3>
+                    <p style="color: var(--accent-cyan); font-size: 1.6rem;">{{ "%.3f"|format(stats.baseline_ml.r2) }}</p>
+                </div>
+                <div class="meta-card">
+                    <h3>RMSE Error</h3>
+                    <p style="color: var(--yellow); font-size: 1.6rem;">{{ "%.2f"|format(stats.baseline_ml.rmse) }}</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if stats.baseline_ml.feature_importances %}
+            <h3 style="margin-bottom: 15px; color: var(--accent-primary); text-align: left;">🔗 Top Predictive Feature Importances</h3>
+            <div class="table-responsive" style="margin-bottom: 15px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Predictive Feature Name</th>
+                            <th>Relative Importance Score</th>
+                            <th>Importance Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in stats.baseline_ml.feature_importances %}
+                        <tr>
+                            <td><strong>{{ item.feature }}</strong></td>
+                            <td style="width: 50%;">
+                                <div style="background: rgba(255,255,255,0.05); border-radius: 6px; width: 100%; height: 12px; overflow: hidden;">
+                                    <div style="background: linear-gradient(90deg, #6366f1, #06b6d4); width: {{ item.importance * 100 }}%; height: 100%;"></div>
+                                </div>
+                            </td>
+                            <td style="color: var(--accent-cyan); font-weight: 600;">{{ "%.1f"|format(item.importance * 100) }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
         <!-- Data Cleaning Summary -->
         <div class="collapsible-card">
             <div class="collapsible-header">🧹 Data Preprocessing & Cleaning Details</div>
@@ -641,6 +707,24 @@ def render_terminal_dashboard(filename: str, df: pd.DataFrame, summary_info: lis
     overview_table.add_row(f"{df.shape[0]:,}", str(df.shape[1]), str(num_c), str(cat_c), str(date_c))
     
     console.print(Panel(overview_table, title="[bold white]📂 Dataset Overview[/bold white]", border_style="blue"))
+    
+    # Baseline ML panel inside Rich console
+    ml_res = stats_out.get('baseline_ml')
+    if ml_res and 'error' not in ml_res:
+        ml_table = Table(box=None, padding=(0, 2))
+        ml_table.add_column("Target Variable", style="bold magenta")
+        ml_table.add_column("Task Type", style="cyan")
+        ml_table.add_column("Primary Performance Metric", style="bold green")
+        
+        t_col = ml_res['target']
+        t_type = ml_res['type'].upper()
+        if ml_res['type'] == 'classification':
+            metric_str = f"Accuracy: {ml_res['accuracy']*100:.1f}% | Weighted F1: {ml_res['f1_score']*100:.1f}%"
+        else:
+            metric_str = f"R² Score: {ml_res['r2']:.3f} | RMSE: {ml_res['rmse']:.2f}"
+            
+        ml_table.add_row(t_col, t_type, metric_str)
+        console.print(Panel(ml_table, title="[bold white]🧠 Autonomous RandomForest Cross-Validation Baseline[/bold white]", border_style="purple"))
     
     # B. Statistical tree summary
     tree = Tree("[bold cyan]📊 Mathematical Summary Metrics[/bold cyan]")

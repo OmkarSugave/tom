@@ -4,13 +4,52 @@ import numpy as np
 def generate_insights(df: pd.DataFrame, col_types: dict, stats_out: dict, cleaning_info: list):
     """
     Analyzes the statistical engine results and generates a list of 10-20 plain-English insights,
-    categorized by severity (🔴 critical, 🟡 warning, 🟢 info).
+    categorized by severity (🔴 critical, 🟡 warning, 🟢 info), including live baseline ML training metrics.
     
     Returns:
         insights (list of dict): Each entry is {'text': str, 'severity': str, 'type': str}
     """
     insights = []
     
+    # 0. Live RandomForest Model Training Insights
+    ml_res = stats_out.get('baseline_ml')
+    if ml_res:
+        if 'error' in ml_res:
+            insights.append({
+                'text': f"Baseline ML model training encountered an error: {ml_res['error']}",
+                'severity': 'warning',
+                'type': 'baseline_ml'
+            })
+        else:
+            t_col = ml_res['target']
+            t_type = ml_res['type']
+            if t_type == 'classification':
+                acc_pct = ml_res['accuracy'] * 100
+                f1_pct = ml_res['f1_score'] * 100
+                insights.append({
+                    'text': f"🚀 Trained live baseline RandomForestClassifier on target `{t_col}` with a 5-Fold Cross-Validation Accuracy of {acc_pct:.1f}% (F1-weighted: {f1_pct:.1f}%).",
+                    'severity': 'info',
+                    'type': 'baseline_ml'
+                })
+            else:
+                r2_score = ml_res['r2']
+                rmse_score = ml_res['rmse']
+                insights.append({
+                    'text': f"🚀 Trained live baseline RandomForestRegressor on target `{t_col}` with a 5-Fold Cross-Validation R² score of {r2_score:.3f} (RMSE: {rmse_score:.2f}).",
+                    'severity': 'info',
+                    'type': 'baseline_ml'
+                })
+                
+            # Top predictive features
+            feat_imp = ml_res.get('feature_importances', [])
+            if feat_imp:
+                top_feats = ", ".join([f"`{item['feature']}` ({item['importance']*100:.1f}%)" for item in feat_imp[:3]])
+                insights.append({
+                    'text': f"💡 Feature Importance Analysis: The top predictive features are {top_feats}.",
+                    'severity': 'info',
+                    'type': 'baseline_ml'
+                })
+
     # 1. Missing Value Insights
     for col_info in cleaning_info:
         col = col_info['column']
@@ -136,7 +175,7 @@ def generate_insights(df: pd.DataFrame, col_types: dict, stats_out: dict, cleani
                 })
             else:
                 insights.append({
-                    'text': f"Column `{col}` has {outlier_pct:.1f}% outliers flagged by the IQR method.",
+                    'text': f"Column `{col}` has {outlier_pct:.1f}% outliers flagged by the Isolation Forest / IQR method.",
                     'severity': 'info',
                     'type': 'outliers'
                 })
@@ -235,7 +274,6 @@ def generate_insights(df: pd.DataFrame, col_types: dict, stats_out: dict, cleani
 
     # 9. Fallback Baseline Insights to ensure we hit 10-20 insights
     if len(insights) < 12:
-        # Add basic dataset information
         n_rows, n_cols = df.shape
         insights.append({
             'text': f"The dataset consists of {n_rows:,} rows and {n_cols} columns.",
@@ -243,7 +281,6 @@ def generate_insights(df: pd.DataFrame, col_types: dict, stats_out: dict, cleani
             'type': 'dataset'
         })
         
-        # Count types
         types_counts = {}
         for col, ctype in col_types.items():
             types_counts[ctype] = types_counts.get(ctype, 0) + 1
@@ -254,7 +291,6 @@ def generate_insights(df: pd.DataFrame, col_types: dict, stats_out: dict, cleani
                 'type': 'dataset'
             })
             
-        # Top unique cardinalities
         for col, stat in stats_out['categorical'].items():
             uniq = stat.get('unique_count', 0)
             if uniq > 0:

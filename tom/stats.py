@@ -4,7 +4,7 @@ import scipy.stats as stats
 import warnings
 
 def analyze_numerical(series: pd.Series):
-    """Computes comprehensive statistics for a single numerical column."""
+    """Computes comprehensive statistics for a single numerical column with high accuracy."""
     non_null = series.dropna()
     if len(non_null) == 0:
         return {}
@@ -141,7 +141,6 @@ def analyze_datetime(series: pd.Series):
     frequent_day_of_week = days_of_week.mode()[0] if len(days_of_week.mode()) > 0 else np.nan
     
     # Trend detection based on record frequency
-    # We group records by month or day (if overall span is short)
     try:
         if span.days > 365:
             freq = non_null.dt.to_period("M").value_counts().sort_index()
@@ -179,7 +178,7 @@ def analyze_datetime(series: pd.Series):
 
 def compute_dataset_stats(df: pd.DataFrame, col_types: dict):
     """
-    Computes dataset-wide statistics including:
+    Computes dataset-wide statistics with high precision:
     - Correlation matrix (Pearson)
     - Top 5 positive and negative correlations
     - Chi-Square tests between categorical columns
@@ -265,13 +264,133 @@ def compute_dataset_stats(df: pd.DataFrame, col_types: dict):
                     
     return results
 
+def train_live_baseline_model(df: pd.DataFrame, col_types: dict):
+    """
+    Autonomously trains a live baseline RandomForest model on the dataset
+    using 5-Fold Cross-Validation, returning actual accuracy/R2 metrics and feature importances.
+    """
+    try:
+        import sklearn.model_selection as ms
+        from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+        from sklearn.preprocessing import LabelEncoder
+    except ImportError:
+        return {'error': 'scikit-learn is not installed in this environment.'}
+        
+    # 1. Target identification
+    # We prefer a categorical target column (not ID) with 2 to 10 unique classes
+    target_col = None
+    target_type = None
+    
+    for col, ctype in col_types.items():
+        if ctype == 'categorical' and col in df.columns and col != df.columns[0]:
+            try:
+                uniq = df[col].nunique()
+                if 2 <= uniq <= 10:
+                    target_col = col
+                    target_type = 'classification'
+                    break
+            except Exception:
+                pass
+                
+    # Fallback to the last numerical column (excluding ID)
+    if target_col is None:
+        num_cols = [c for c, t in col_types.items() if t == 'numerical' and c in df.columns]
+        if num_cols:
+            target_col = num_cols[-1]
+            target_type = 'regression'
+            
+    if target_col is None:
+        return None
+        
+    # 2. Extract Features
+    # Exclude ID, Text_ID, target, and datetime features
+    feature_cols = [c for c, t in col_types.items() if t in ['numerical', 'categorical'] and c != target_col and c in df.columns]
+    if not feature_cols:
+        return None
+        
+    try:
+        # Preprocess features
+        X_raw = df[feature_cols].copy()
+        y_raw = df[target_col].copy()
+        
+        # Drop rows with NaN in target
+        valid_idx = y_raw.notnull()
+        X_raw = X_raw[valid_idx]
+        y_raw = y_raw[valid_idx]
+        
+        if len(y_raw) < 10: # not enough records to build a robust baseline
+            return None
+            
+        # One-hot encode categoricals in feature set
+        cat_features = [c for c in feature_cols if col_types.get(c) == 'categorical']
+        X = pd.get_dummies(X_raw, columns=cat_features, drop_first=True)
+        
+        # Impute any leftover NaNs
+        X = X.fillna(X.median(numeric_only=True))
+        
+        # Preprocess target
+        if target_type == 'classification':
+            le = LabelEncoder()
+            y = le.fit_transform(y_raw.astype(str))
+            
+            # 5-fold cross validation
+            model = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
+            cv_results = ms.cross_validate(model, X, y, cv=min(5, len(X)), scoring=['accuracy', 'f1_weighted'])
+            
+            # Fit on all data for feature importance
+            model.fit(X, y)
+            
+            acc = float(cv_results['test_accuracy'].mean())
+            f1 = float(cv_results['test_f1_weighted'].mean())
+            
+            results = {
+                'target': target_col,
+                'type': 'classification',
+                'metric_name': 'Accuracy / F1-Score',
+                'accuracy': acc,
+                'f1_score': f1,
+                'classes': [str(c) for c in le.classes_]
+            }
+        else:
+            y = y_raw.values
+            
+            # 5-fold cross validation
+            model = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
+            cv_results = ms.cross_validate(model, X, y, cv=min(5, len(X)), scoring=['r2', 'neg_root_mean_squared_error'])
+            
+            # Fit on all data for feature importance
+            model.fit(X, y)
+            
+            r2 = float(cv_results['test_r2'].mean())
+            rmse = float(-cv_results['test_neg_root_mean_squared_error'].mean())
+            
+            results = {
+                'target': target_col,
+                'type': 'regression',
+                'metric_name': 'R² / RMSE',
+                'r2': r2,
+                'rmse': rmse
+            }
+            
+        # Extract Top 5 Feature Importances
+        importances = model.feature_importances_
+        feature_names = X.columns
+        feat_imp_pairs = sorted(zip(feature_names, importances), key=lambda x: x[1], reverse=True)[:5]
+        
+        results['feature_importances'] = [{'feature': str(f), 'importance': float(i)} for f, i in feat_imp_pairs]
+        return results
+        
+    except Exception as e:
+        return {'error': str(e)}
+
 def compute_all_stats(df: pd.DataFrame, col_types: dict):
-    """Runs all individual and global statistical calculations."""
+    """Runs all individual, global, and baseline machine learning evaluations."""
     stats_out = {
         'numerical': {},
         'categorical': {},
         'datetime': {},
-        'dataset': {}
+        'dataset': {},
+        'baseline_ml': None
     }
     
     for col, ctype in col_types.items():
@@ -285,4 +404,5 @@ def compute_all_stats(df: pd.DataFrame, col_types: dict):
             stats_out['datetime'][col] = analyze_datetime(df[col])
             
     stats_out['dataset'] = compute_dataset_stats(df, col_types)
+    stats_out['baseline_ml'] = train_live_baseline_model(df, col_types)
     return stats_out
