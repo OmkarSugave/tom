@@ -9,3 +9,6 @@ plotly
 kaleido
 jinja2
 tabulate
+flask
+openpyxl
+gunicorn
